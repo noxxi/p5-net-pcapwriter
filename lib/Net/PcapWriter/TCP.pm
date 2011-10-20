@@ -4,7 +4,13 @@ use warnings;
 package Net::PcapWriter::TCP;
 use fields qw(flow writer last_timestamp);
 use Net::PcapWriter::IP;
-use Socket qw(inet_pton AF_INET IPPROTO_TCP);
+use Socket qw(AF_INET IPPROTO_TCP);
+BEGIN { 
+	# inet_pton is in Socket since 5.12
+	eval { Socket->import('inet_pton');1 }
+		or eval { require Socket6; Socket6->import('inet_pton');1 }
+		or die "you need either a modern perl or Socket6"
+}
 
 sub new {
 	my ($class,$writer,$src,$sport,$dst,$dport) = @_;

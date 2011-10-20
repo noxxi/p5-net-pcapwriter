@@ -1,7 +1,13 @@
 use strict;
 use warnings;
 use Net::PcapWriter::IP;
-use Socket qw(inet_pton AF_INET);
+use Socket qw(AF_INET);
+BEGIN { 
+	# inet_pton is in Socket since 5.12
+	eval { Socket->import('inet_pton');1 }
+		or eval { require Socket6; Socket6->import('inet_pton');1 }
+		or die "you need either a modern perl or Socket6: $@"
+}
 use base 'Exporter';
 our @EXPORT = qw(ip_chksum ip4_packet);
 
