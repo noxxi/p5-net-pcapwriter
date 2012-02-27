@@ -16,7 +16,7 @@ undef $conn;
 # output of tcpdump can be different on each platform, and maybe
 # no tcpdump is installed. So just check some stuff in file
 
-ok( length($pcap) == 584 );
-ok( substr($pcap,0xf8,18) eq "GET / HTTP/1.0\r\n\r\n" );
-ok( substr($pcap,0xa4,8) eq pack("CCCCCCCC",1..8));
-ok( substr($pcap,0x14,1) eq pack("C", $^O =~/OpenBSD/i ? 14:12 ));
+ok( length($pcap) == 710 );
+ok( substr($pcap,0x130,18) eq "GET / HTTP/1.0\r\n\r\n" );
+ok( substr($pcap,0xce,8) eq pack("CCCCCCCC",1..8));
+ok( substr($pcap,0x14,1) eq "\001");

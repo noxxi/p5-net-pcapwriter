@@ -4,7 +4,7 @@ package Net::PcapWriter;
 use Time::HiRes 'gettimeofday';
 use Net::PcapWriter::TCP;
 
-our $VERSION = 0.1;
+our $VERSION = 0.2;
 
 sub new {
 	my ($class,$file) = @_;
@@ -42,8 +42,7 @@ sub _header {
 		2,4,        # major, minor
 		0,0,        # timestamps correction and accuracy
 		0xffff,     # snaplen
-		# DLT_RAW is 12, but not on OpenBSD and BSD/OS (14)
-		$^O =~/OpenBSD/i ? 14:12,  
+		1,          # DLT_EN10MB
 	);
 }
 
@@ -66,6 +65,16 @@ sub packet {
 		$tsec = int($timestamp);
 		$tmsec = int(($timestamp - $tsec)*1_000_000);
 	}
+
+	# add ethernet framing so that we can use DLT_EN10MB
+	# DLT_RAW is nicer, but different systems have different ideas about
+	# the type id :(
+	$data = pack("NnNnna*",
+	    0,1,0,1, # all macs 0:*
+	    0x0800, # ETH_TYPE_IP
+	    $data,
+	);
+
 	print {$self->{fh}} pack('LLLLa*',
 		$tsec,$tmsec,       # struct timeval ts
 		length($data),      # caplen

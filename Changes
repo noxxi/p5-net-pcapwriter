@@ -1,2 +1,5 @@
+0.2 2012-02-27
+- switch to DLT_EN10MB instead of DLT_RAW, because type-id is the same for
+  all systems
 0.1 2011-10-07
 - initial release
