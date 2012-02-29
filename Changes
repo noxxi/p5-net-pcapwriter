@@ -1,3 +1,5 @@
+0.4 2012-02-29
+- add Socket6 to PREREQ_PM if inet_pton is not in Socket yet (<5.12)
 0.3 2012-02-27
 - switch to DLT_EN10MB instead of DLT_RAW, because type-id is the same for
   all systems
