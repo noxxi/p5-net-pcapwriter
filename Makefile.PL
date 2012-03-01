@@ -9,4 +9,5 @@ $prereq{Socket6} = 0 if ! eval { Socket->import('inet_pton');1 };
 WriteMakefile(
 	NAME => 'Net::PcapWriter',
 	VERSION_FROM => 'lib/Net/PcapWriter.pm',
+	PREREQ_PM => \%prereq,
 );
