@@ -18,6 +18,7 @@ sub new {
 	} else {
 		$fh = \*STDOUT;
 	}
+	select((select($fh), $| = 1)[0]);
 	my $self = bless { fh => $fh },$class;
 	$self->_header;
 	return $self;
@@ -60,7 +61,7 @@ sub packet {
 	my ($tsec,$tmsec);
 	if (ref($timestamp)) {
 		# array like in Time::HiRes
-		($tsec,$tmsec) = @$timestamp; 
+		($tsec,$tmsec) = @$timestamp;
 	} else {
 		$tsec = int($timestamp);
 		$tmsec = int(($timestamp - $tsec)*1_000_000);
