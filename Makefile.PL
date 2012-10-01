@@ -10,4 +10,5 @@ WriteMakefile(
 	NAME => 'Net::PcapWriter',
 	VERSION_FROM => 'lib/Net/PcapWriter.pm',
 	PREREQ_PM => \%prereq,
+	LICENSE => 'perl',
 );

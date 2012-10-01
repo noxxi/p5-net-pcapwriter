@@ -1,3 +1,5 @@
+0.6 2012-10-01
+- add license to Makefile.PL, change email in author section
 0.5 2012-03-01
 - forgot to add PREREQ_PM to WriteMakefile
 0.4 2012-02-29

@@ -4,7 +4,7 @@ package Net::PcapWriter;
 use Time::HiRes 'gettimeofday';
 use Net::PcapWriter::TCP;
 
-our $VERSION = 0.5;
+our $VERSION = 0.6;
 
 sub new {
 	my ($class,$file) = @_;
@@ -180,4 +180,4 @@ Only supports IPv4 at the moment.
 
 =head1 AUTHOR
 
-Steffen Ullrich <Steffen_Ullrich@GeNUA.de>
+Steffen Ullrich <sullr@cpan.org>
