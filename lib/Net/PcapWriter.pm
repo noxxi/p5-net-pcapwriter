@@ -3,8 +3,9 @@ use warnings;
 package Net::PcapWriter;
 use Time::HiRes 'gettimeofday';
 use Net::PcapWriter::TCP;
+use Net::PcapWriter::UDP;
 
-our $VERSION = 0.6;
+our $VERSION = 0.7;
 
 sub new {
 	my ($class,$file) = @_;
@@ -90,6 +91,12 @@ sub tcp_conn {
 	return Net::PcapWriter::TCP->new($self,$src,$sport,$dst,$dport);
 }
 
+# return new UDP connection object
+sub udp_conn {
+	my ($self,$src,$sport,$dst,$dport) = @_;
+	return Net::PcapWriter::UDP->new($self,$src,$sport,$dst,$dport);
+}
+
 1;
 
 __END__
@@ -169,6 +176,18 @@ Will add FIN+ACK for shutdown from direction C<$dir> unless already done.
 =item undef $tcpconn
 
 Will call shutdown for both C<$dir> before destroying connection object.
+
+=back
+
+=item $writer->tcp_conn($src,$sport,$dst,$dport)
+
+Will return C<Net::PcapWriter::TCP> object, which then provides the following
+methods:
+
+=item $tcpconn->write($dir,$data,[$timestamp])
+
+Will write the given data for the direction C<$dir> (0 are data from client to
+server, 1 the other way). Will write TCP handshake if not done yet.
 
 =back
 

@@ -1,2 +1,1 @@
-- ipv6 support for TCP
-- support for UDP connections
+- ipv6 support for TCP and UDP

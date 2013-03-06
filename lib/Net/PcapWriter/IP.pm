@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Net::PcapWriter::IP;
+package Net::PcapWriter::IP;
 use Socket qw(AF_INET);
 BEGIN { 
 	# inet_pton is in Socket since 5.12
