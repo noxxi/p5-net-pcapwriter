@@ -1,3 +1,6 @@
+0.71 2013-05-07
+- fixed writing timestamp in Tcp.pm and Udp.pm
+  Thanks to christian[DOT]janssen[AT]evonik[DOT]com for reporting
 0.7 2013-03-06
 - add udp_conn
 0.6 2012-10-01

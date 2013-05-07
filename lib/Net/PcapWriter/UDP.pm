@@ -47,8 +47,7 @@ sub write {
 		$flow->[0],
 		$flow->[1],
 		IPPROTO_UDP,
-		$timestamp
-	));
+	), $timestamp );
 }
 
 1;
