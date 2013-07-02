@@ -1,3 +1,5 @@
+0.710_1 2013-07-02
+- try to detect unusable inet_pton in Makefile.PL (Win32)
 0.71 2013-05-07
 - fixed writing timestamp in Tcp.pm and Udp.pm
   Thanks to christian[DOT]janssen[AT]evonik[DOT]com for reporting

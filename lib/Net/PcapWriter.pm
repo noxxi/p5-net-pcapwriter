@@ -5,7 +5,7 @@ use Time::HiRes 'gettimeofday';
 use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 
-our $VERSION = 0.71;
+our $VERSION = '0.710_1';
 
 sub new {
 	my ($class,$file) = @_;
