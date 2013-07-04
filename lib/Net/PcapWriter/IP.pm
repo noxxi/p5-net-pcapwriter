@@ -2,14 +2,25 @@ use strict;
 use warnings;
 package Net::PcapWriter::IP;
 use Socket qw(AF_INET);
+
 BEGIN { 
 	# inet_pton is in Socket since 5.12
-	eval { Socket->import('inet_pton');1 }
-		or eval { require Socket6; Socket6->import('inet_pton');1 }
-		or die "you need either a modern perl or Socket6: $@"
+	# but even if it is in Socket it can throw a non-implemented error
+	eval { 
+		Socket->import('inet_pton'); 
+		inet_pton(AF_INET,'127.0.0.1'); 
+		1 
+	} or eval { 
+		require Socket6; 
+		Socket6->import('inet_pton');
+		inet_pton(AF_INET,'127.0.0.1');
+		1 
+	} or die "you need either a modern perl or Socket6"
 }
+
 use base 'Exporter';
-our @EXPORT = qw(ip_chksum ip4_packet);
+# re-export the usable inet_pton
+our @EXPORT = qw(ip_chksum ip4_packet inet_pton);
 
 # write IPv4 packet
 sub ip4_packet {
