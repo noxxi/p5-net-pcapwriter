@@ -16,4 +16,9 @@ WriteMakefile(
 	VERSION_FROM => 'lib/Net/PcapWriter.pm',
 	PREREQ_PM => \%prereq,
 	LICENSE => 'perl',
+	META_MERGE => {
+		resources => {
+			repository => 'https://github.com/noxxi/p5-net-pcapwriter',
+		},
+	},
 );
