@@ -191,8 +191,6 @@ server, 1 the other way). Will write TCP handshake if not done yet.
 
 =back
 
-=back
-
 =head1 BUGS
 
 Only supports IPv4 at the moment.
