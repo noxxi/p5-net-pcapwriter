@@ -5,96 +5,96 @@ use Time::HiRes 'gettimeofday';
 use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 
-our $VERSION = '0.710_2';
+our $VERSION = '0.711';
 
 sub new {
-	my ($class,$file) = @_;
-	my $fh;
-	if ( $file ) {
-		if ( ref($file)) {
-			$fh = $file
-		} else {
-			open($fh,'>',$file) or die "open $file: $!";
-		}
+    my ($class,$file) = @_;
+    my $fh;
+    if ( $file ) {
+	if ( ref($file)) {
+	    $fh = $file
 	} else {
-		$fh = \*STDOUT;
+	    open($fh,'>',$file) or die "open $file: $!";
 	}
-	my $self = bless { fh => $fh },$class;
-	$self->_header;
-	return $self;
+    } else {
+	$fh = \*STDOUT;
+    }
+    my $self = bless { fh => $fh },$class;
+    $self->_header;
+    return $self;
 }
 
 # write pcap header
 sub _header {
-	my $self = shift;
+    my $self = shift;
 
-	# struct pcap_file_header {
-	#     bpf_u_int32 magic;
-	#     u_short version_major;
-	#     u_short version_minor;
-	#     bpf_int32 thiszone; /* gmt to local correction */
-	#     bpf_u_int32 sigfigs;    /* accuracy of timestamps */
-	#     bpf_u_int32 snaplen;    /* max length saved portion of each pkt */
-	#     bpf_u_int32 linktype;   /* data link type (LINKTYPE_*) */
-	# };
+    # struct pcap_file_header {
+    #     bpf_u_int32 magic;
+    #     u_short version_major;
+    #     u_short version_minor;
+    #     bpf_int32 thiszone; /* gmt to local correction */
+    #     bpf_u_int32 sigfigs;    /* accuracy of timestamps */
+    #     bpf_u_int32 snaplen;    /* max length saved portion of each pkt */
+    #     bpf_u_int32 linktype;   /* data link type (LINKTYPE_*) */
+    # };
 
-	print {$self->{fh}} pack('LSSlLLL',
-		0xa1b2c3d4, # magic
-		2,4,        # major, minor
-		0,0,        # timestamps correction and accuracy
-		0xffff,     # snaplen
-		1,          # DLT_EN10MB
-	);
+    print {$self->{fh}} pack('LSSlLLL',
+	0xa1b2c3d4, # magic
+	2,4,        # major, minor
+	0,0,        # timestamps correction and accuracy
+	0xffff,     # snaplen
+	1,          # DLT_EN10MB
+    );
 }
 
 # write pcap packet
 sub packet {
-	my ($self,$data,$timestamp) = @_;
-	$timestamp ||= [ gettimeofday() ];
+    my ($self,$data,$timestamp) = @_;
+    $timestamp ||= [ gettimeofday() ];
 
-	# struct pcap_pkthdr {
-	#     struct timeval ts;  /* time stamp */
-	#     bpf_u_int32 caplen; /* length of portion present */
-	#     bpf_u_int32 len;    /* length this packet (off wire) */
-	# };
+    # struct pcap_pkthdr {
+    #     struct timeval ts;  /* time stamp */
+    #     bpf_u_int32 caplen; /* length of portion present */
+    #     bpf_u_int32 len;    /* length this packet (off wire) */
+    # };
 
-	my ($tsec,$tmsec);
-	if (ref($timestamp)) {
-		# array like in Time::HiRes
-		($tsec,$tmsec) = @$timestamp; 
-	} else {
-		$tsec = int($timestamp);
-		$tmsec = int(($timestamp - $tsec)*1_000_000);
-	}
+    my ($tsec,$tmsec);
+    if (ref($timestamp)) {
+	# array like in Time::HiRes
+	($tsec,$tmsec) = @$timestamp; 
+    } else {
+	$tsec = int($timestamp);
+	$tmsec = int(($timestamp - $tsec)*1_000_000);
+    }
 
-	# add ethernet framing so that we can use DLT_EN10MB
-	# DLT_RAW is nicer, but different systems have different ideas about
-	# the type id :(
-	$data = pack("NnNnna*",
-	    0,1,0,1, # all macs 0:*
-	    0x0800, # ETH_TYPE_IP
-	    $data,
-	);
+    # add ethernet framing so that we can use DLT_EN10MB
+    # DLT_RAW is nicer, but different systems have different ideas about
+    # the type id :(
+    $data = pack("NnNnna*",
+	0,1,0,1, # all macs 0:*
+	0x0800, # ETH_TYPE_IP
+	$data,
+    );
 
-	print {$self->{fh}} pack('LLLLa*',
-		$tsec,$tmsec,       # struct timeval ts
-		length($data),      # caplen
-		length($data),      # len
-		$data,              # data
-	);
+    print {$self->{fh}} pack('LLLLa*',
+	$tsec,$tmsec,       # struct timeval ts
+	length($data),      # caplen
+	length($data),      # len
+	$data,              # data
+    );
 }
 
 
 # return new TCP connection object
 sub tcp_conn {
-	my ($self,$src,$sport,$dst,$dport) = @_;
-	return Net::PcapWriter::TCP->new($self,$src,$sport,$dst,$dport);
+    my ($self,$src,$sport,$dst,$dport) = @_;
+    return Net::PcapWriter::TCP->new($self,$src,$sport,$dst,$dport);
 }
 
 # return new UDP connection object
 sub udp_conn {
-	my ($self,$src,$sport,$dst,$dport) = @_;
-	return Net::PcapWriter::UDP->new($self,$src,$sport,$dst,$dport);
+    my ($self,$src,$sport,$dst,$dport) = @_;
+    return Net::PcapWriter::UDP->new($self,$src,$sport,$dst,$dport);
 }
 
 1;
@@ -128,6 +128,11 @@ Net::PcapWriter - simple creation of pcap files from code
 
  # will automatically add remaining FIN+ACK
  undef $conn;
+
+ # write some UDP packets with IPv6
+ $conn = $writer->udp_conn('dead::beaf',1234,'beaf::dead',53);
+ $conn->write(0,"....");
+ $conn->write(1,"....");
 
 =head1 DESCRIPTION
 
@@ -179,21 +184,17 @@ Will call shutdown for both C<$dir> before destroying connection object.
 
 =back
 
-=item $writer->tcp_conn($src,$sport,$dst,$dport)
+=item $writer->udp_conn($src,$sport,$dst,$dport)
 
-Will return C<Net::PcapWriter::TCP> object, which then provides the following
+Will return C<Net::PcapWriter::UDP> object, which then provides the following
 methods:
 
 =item $tcpconn->write($dir,$data,[$timestamp])
 
 Will write the given data for the direction C<$dir> (0 are data from client to
-server, 1 the other way). Will write TCP handshake if not done yet.
+server, 1 the other way).
 
 =back
-
-=head1 BUGS
-
-Only supports IPv4 at the moment.
 
 =head1 AUTHOR
 

@@ -1,3 +1,5 @@
+0.711 2014-07-03
+- added support for IPv6
 0.710_2 2013-07-04
 - try to find usable inet_pton in IP.pm and export it for TCP and UDP
 0.710_1 2013-07-02
