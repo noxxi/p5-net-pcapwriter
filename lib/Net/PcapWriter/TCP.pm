@@ -63,7 +63,7 @@ sub write_with_flags {
 	$flow->[0],
 	$flow->[1],
 	IPPROTO_TCP,
-	18
+	16
     ), $timestamp );
 }
 

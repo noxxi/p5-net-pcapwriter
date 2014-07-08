@@ -1,3 +1,5 @@
+0.711 2014-07-04
+- fix checksum computation, thanks to BLUHM for reporting
 0.711 2014-07-03
 - added support for IPv6
 0.710_2 2013-07-04
