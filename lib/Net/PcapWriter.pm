@@ -4,8 +4,9 @@ package Net::PcapWriter;
 use Time::HiRes 'gettimeofday';
 use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
+use Net::PcapWriter::ICMP;
 
-our $VERSION = '0.712';
+our $VERSION = '0.713';
 
 sub new {
     my ($class,$file) = @_;
@@ -97,6 +98,14 @@ sub udp_conn {
     return Net::PcapWriter::UDP->new($self,$src,$sport,$dst,$dport);
 }
 
+# return new ICMP "connection" object
+sub icmp_conn {
+    my ($self,$src,$dst,$seq) = @_;
+    return Net::PcapWriter::ICMP->new($self,$src,$dst);
+}
+
+
+
 1;
 
 __END__
@@ -133,6 +142,12 @@ Net::PcapWriter - simple creation of pcap files from code
  $conn = $writer->udp_conn('dead::beaf',1234,'beaf::dead',53);
  $conn->write(0,"....");
  $conn->write(1,"....");
+
+ #write a ping exchange 
+ $conn = $writer->icmp_conn('1.2.3.4','5.6.7.8',10);
+ $conn->ping(0,"abcd");
+ $conn->ping(1,"efgh");
+
 
 =head1 DESCRIPTION
 
@@ -193,6 +208,26 @@ methods:
 
 Will write the given data for the direction C<$dir> (0 are data from client to
 server, 1 the other way).
+
+=item $writer->icmp_conn($src,$sport,[$seq])
+
+Will return C<Net::PcapWriter::UDP> object, which then provides the following
+methods:
+
+=item $icmp_conn->write($dir,$code,$type,$data,[$timestamp])
+
+Will write the given data for the direction C<$dir> (0 are data from client to
+server, 1 the other way) in an ICMP packet of code C<$code> and type C<$type>
+
+=item $icmp_conn->ping($dir,$data,[$timestamp])
+
+Will write the given data for the direction C<$dir> (0 are data from client to
+server, 1 the other way) in an ICMP Echo Request packet
+
+=item $icmp_conn->pong($dir,$data,[$timestamp])
+
+Will write the given data for the direction C<$dir> (0 are data from client to
+server, 1 the other way) in an ICMP Echo Reply packet
 
 =back
 

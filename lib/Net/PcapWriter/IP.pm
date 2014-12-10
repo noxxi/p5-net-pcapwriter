@@ -41,11 +41,16 @@ sub ip4_packet {
     );
 
     if (defined $chksum_offset) {
-	my $ckdata = substr($hdr,-8).pack('xCna*',
-	    $protocol,length($data),  # proto + len
-	    $data
-	);
-	substr($data,$chksum_offset, 2) = pack('n',ip_chksum($ckdata));
+	  if ( $chksum_offset >0 ) {
+                my $ckdata = substr($hdr,-8).pack('xCna*',
+                    $protocol,length($data),  # proto + len
+                    $data
+                );
+                substr($data,$chksum_offset, 2) = pack('n',ip_chksum($ckdata)); }
+        else {
+                substr($data,-$chksum_offset, 2) = pack('n',ip_chksum($data));
+        }
+
     }
 
     substr($hdr,10,2) = pack('n',ip_chksum($hdr));
@@ -65,11 +70,12 @@ sub ip6_packet {
     );
 
     if (defined $chksum_offset) {
-	my $ckdata = substr($hdr,-32).pack('NxxxCa*',
-	    length($data), $protocol, # len + proto
-	    $data
-	);
-	substr($data,$chksum_offset, 2) = pack('n',ip_chksum($ckdata));
+ 	my $ckdata = substr($hdr,-32).pack('NxxxCa*',
+            length($data), $protocol, # len + proto
+            $data
+        );
+        substr($data,$chksum_offset, 2) = pack('n',ip_chksum($ckdata));
+
     }
 
     return $hdr.$data;
