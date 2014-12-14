@@ -4,7 +4,7 @@ package Net::PcapWriter;
 use Time::HiRes 'gettimeofday';
 use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
-use Net::PcapWriter::ICMP;
+use Net::PcapWriter::ICMP_Echo;
 
 our $VERSION = '0.713';
 
@@ -98,13 +98,11 @@ sub udp_conn {
     return Net::PcapWriter::UDP->new($self,$src,$sport,$dst,$dport);
 }
 
-# return new ICMP "connection" object
-sub icmp_conn {
-    my ($self,$src,$dst,$seq) = @_;
-    return Net::PcapWriter::ICMP->new($self,$src,$dst);
+# return new ICMP_Echo "connection" object
+sub icmp_echo_conn {
+    my ($self,$src,$dst,$id) = @_;
+    return Net::PcapWriter::ICMP_Echo->new($self,$src,$dst,$id);
 }
-
-
 
 1;
 
@@ -143,10 +141,11 @@ Net::PcapWriter - simple creation of pcap files from code
  $conn->write(0,"....");
  $conn->write(1,"....");
 
- #write a ping exchange 
- $conn = $writer->icmp_conn('1.2.3.4','5.6.7.8',10);
- $conn->ping(0,"abcd");
- $conn->ping(1,"efgh");
+ # write a ping exchange (works also with IPv6)
+ $conn = $writer->icmp_echo_conn('1.2.3.4','5.6.7.8',10);
+ $conn->ping(1,"foo");
+ $conn->ping(2,"bar");
+ $conn->pong(1,"foo");
 
 
 =head1 DESCRIPTION
@@ -209,25 +208,22 @@ methods:
 Will write the given data for the direction C<$dir> (0 are data from client to
 server, 1 the other way).
 
-=item $writer->icmp_conn($src,$sport,[$seq])
+=item $writer->icmp_echo_conn($src,$dst,[$id])
 
-Will return C<Net::PcapWriter::UDP> object, which then provides the following
-methods:
+Will return C<Net::PcapWriter::ICMP_Echo> object which provides a connection
+with echo request and reply using the identifier $id (default 0). This object
+can handle echo request/reply for ICMP and ICMPv6.
+It has the following methods:
 
-=item $icmp_conn->write($dir,$code,$type,$data,[$timestamp])
+=item $echo->ping($seq,$data,[$timestamp])
 
-Will write the given data for the direction C<$dir> (0 are data from client to
-server, 1 the other way) in an ICMP packet of code C<$code> and type C<$type>
+Will write an ICMP echo request from connection source to destination with
+sequence $seq and data $data.
 
-=item $icmp_conn->ping($dir,$data,[$timestamp])
+=item $echo->pong($seq,$data,[$timestamp])
 
-Will write the given data for the direction C<$dir> (0 are data from client to
-server, 1 the other way) in an ICMP Echo Request packet
-
-=item $icmp_conn->pong($dir,$data,[$timestamp])
-
-Will write the given data for the direction C<$dir> (0 are data from client to
-server, 1 the other way) in an ICMP Echo Reply packet
+Will write an ICMP echo reply from connection destination to source with
+sequence $seq and data $data.
 
 =back
 

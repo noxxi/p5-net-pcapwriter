@@ -1,4 +1,6 @@
-0.711 2014-07-04
+0.713 2014-12-14
+- support for ICMP/ICMPv6 echo, based on patch from EmmanuelBau
+0.712 2014-07-04
 - fix checksum computation, thanks to BLUHM for reporting
 0.711 2014-07-03
 - added support for IPv6
