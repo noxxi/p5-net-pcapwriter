@@ -1,3 +1,5 @@
+0.714 2014-12-15
+- forgot to add ICMP_Echo.pm to MANIFEST
 0.713 2014-12-14
 - support for ICMP/ICMPv6 echo, based on patch from EmmanuelBau
 0.712 2014-07-04

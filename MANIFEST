@@ -6,6 +6,7 @@ lib/Net/PcapWriter.pm
 lib/Net/PcapWriter/IP.pm
 lib/Net/PcapWriter/TCP.pm
 lib/Net/PcapWriter/UDP.pm
+lib/Net/PcapWriter/ICMP_Echo.pm
 Makefile.PL
 t/01_load.t
 t/02_tcpconn.t
