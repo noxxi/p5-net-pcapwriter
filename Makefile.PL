@@ -21,4 +21,5 @@ WriteMakefile(
 			repository => 'https://github.com/noxxi/p5-net-pcapwriter',
 		},
 	},
+	TEST_REQUIRES => {'Test::Kwalitee' => 0,},
 );
