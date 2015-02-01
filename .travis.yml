@@ -1,0 +1,10 @@
+language: perl
+matrix:
+ include:
+  - perl: "5.20"
+  - perl: "5.18"
+  - perl: "5.16"
+  - perl: "5.14"
+  - perl: "5.12"
+  - perl: "5.10"
+  - perl: "5.8"
