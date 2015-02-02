@@ -21,4 +21,6 @@ WriteMakefile(
 			repository => 'https://github.com/noxxi/p5-net-pcapwriter',
 		},
 	},
+	MIN_PERL_VERSION => '5.8.8',
+	TEST_REQUIRES => {'Test::Kwalitee' => 0,},
 );
