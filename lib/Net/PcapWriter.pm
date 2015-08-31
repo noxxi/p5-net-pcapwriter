@@ -6,7 +6,7 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.715';
+our $VERSION = '0.716';
 
 sub new {
     my ($class,$file) = @_;
@@ -16,6 +16,7 @@ sub new {
 	    $fh = $file
 	} else {
 	    open($fh,'>',$file) or die "open $file: $!";
+	    binmode($fh);
 	}
     } else {
 	$fh = \*STDOUT;

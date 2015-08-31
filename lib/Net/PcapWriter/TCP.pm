@@ -101,6 +101,7 @@ sub _close {
 sub shutdown {
     my ($self,$dir,$timestamp) = @_;
     if ( not $self->{flow}[$dir][4] & 0b0100 ) {
+	$self->_connect($timestamp);
 	$self->write_with_flags($dir,'',{ fin => 1 },$timestamp);
 	$self->ack($dir?0:1,$timestamp);
 	$self->{flow}[$dir][4] |= 0b0100;

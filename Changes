@@ -1,3 +1,6 @@
+0.716 2015-08-31
+- set binmode for output file to work on Windows platforms.
+  Thanks to security[AT]knochner[DOT]com for reporting.
 0.715 2015-02-02
 - merge changes to fix kwalitee issues.
   Thanks to oeuftete and to CPAN Pull Request Challenge
