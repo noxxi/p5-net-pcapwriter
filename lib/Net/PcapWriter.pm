@@ -185,11 +185,11 @@ methods:
 Will write the given data for the direction C<$dir> (0 are data from client to
 server, 1 the other way). Will write TCP handshake if not done yet.
 
-=item $tcpconn->ack($dir)
+=item $tcpconn->ack($dir,[$timestamp])
 
 Will write an empty message with an ACK from direction C<$dir>.
 
-=item $tcpconn->shutdown($dir)
+=item $tcpconn->shutdown($dir,[$timestamp])
 
 Will add FIN+ACK for shutdown from direction C<$dir> unless already done.
 
