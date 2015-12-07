@@ -6,7 +6,7 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.716';
+our $VERSION = '0.717';
 
 sub new {
     my ($class,$file) = @_;
@@ -192,6 +192,16 @@ Will write an empty message with an ACK from direction C<$dir>.
 =item $tcpconn->shutdown($dir,[$timestamp])
 
 Will add FIN+ACK for shutdown from direction C<$dir> unless already done.
+
+=item $tcpconn->write_with_flags($dir,$data,\%flags,[$timestamp])
+
+Write a TCP packet with specific flags, like 
+C<<{ syn => 1, ack => 1 }>>. This is also internally used to
+automatically add the initial handshake (i.e SYN from client, SYN+ACK from
+server and SYN+ACK from client) and the close of the connection (FIN), whereby
+the close can be easier handled with C<shutdown>.
+
+Possible flags are syn, ack, fin, rst, psh and rst.
 
 =item undef $tcpconn
 

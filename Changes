@@ -1,3 +1,8 @@
+0.717 2015-12-07
+- update documentation for TCP ack, shutdown to include timestamp.
+  Add write_with_flags to documented API for TCP. Make write_with_flags
+  update the internal state of the connection. Optimize DESTROY/_close
+  to write only the packets which are necessary to close the connection.
 0.716 2015-08-31
 - set binmode for output file to work on Windows platforms.
   Thanks to security[AT]knochner[DOT]com for reporting.

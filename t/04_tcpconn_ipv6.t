@@ -16,7 +16,7 @@ undef $conn;
 # output of tcpdump can be different on each platform, and maybe
 # no tcpdump is installed. So just check some stuff in file
 
-ok( length($pcap) == 890 );
+ok( length($pcap) == 800 );
 ok( substr($pcap,0x180,18) eq "GET / HTTP/1.0\r\n\r\n" );
 ok( substr($pcap,0x154,8) eq "\x00\x01\x00\x02\x00\x03\x00\x04");
 ok( substr($pcap,0x164,8) eq "\x00\x05\x00\x06\x00\x07\x00\x08");
