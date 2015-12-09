@@ -6,7 +6,7 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.717';
+our $VERSION = '0.718';
 
 sub new {
     my ($class,$file) = @_;
@@ -49,6 +49,14 @@ sub _header {
     );
 }
 
+sub layer2prefix {
+    my $ip = pop;
+    return pack("NnNnn",
+	0,1,0,1, # all macs 0:*
+	$ip =~m{:} ? 0x86dd: 0x0800, # ETH_TYPE_IP6 | ETH_TYPE_IP
+    );
+}
+
 # write pcap packet
 sub packet {
     my ($self,$data,$timestamp) = @_;
@@ -68,15 +76,6 @@ sub packet {
 	$tsec = int($timestamp);
 	$tmsec = int(($timestamp - $tsec)*1_000_000);
     }
-
-    # add ethernet framing so that we can use DLT_EN10MB
-    # DLT_RAW is nicer, but different systems have different ideas about
-    # the type id :(
-    $data = pack("NnNnna*",
-	0,1,0,1, # all macs 0:*
-	0x0800, # ETH_TYPE_IP
-	$data,
-    );
 
     print {$self->{fh}} pack('LLLLa*',
 	$tsec,$tmsec,       # struct timeval ts
@@ -168,10 +167,12 @@ Will write pcap header for DLT_RAW to pcap file.
 
 =item $writer->packet($pkt,[$timestamp])
 
-Will write raw IP packet $pkt with $timestamp in pcap file.
+Will write raw Layer 2 packet $pkt with $timestamp in pcap file.
 $timestamp can be C<time_t> (seconds), float (like C<time_t>, but with higher
 resolution) or C<<[$sec,$msec]>> like in C<<struct timeval>>.
 If $timestamp is not given will use C<Time::HiRes::gettimeofday>.
+
+To get the Layer 2 prefix in case of IP data use C<$writer->layer2prefix($ip)>.
 
 =item $writer->tcp_conn($src,$sport,$dst,$dport)
 

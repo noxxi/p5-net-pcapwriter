@@ -1,3 +1,8 @@
+0.718 2015-12-08
+- fix IPv6 support (was bad ethernet type id)
+- performance should be faster for TCP and UDP now
+- Behavior change: Net::PcapWriter::packet gets Layer 2 packet now
+  (ethernet layer) instead of IP packet
 0.717 2015-12-07
 - update documentation for TCP ack, shutdown to include timestamp.
   Add write_with_flags to documented API for TCP. Make write_with_flags

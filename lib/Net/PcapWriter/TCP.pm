@@ -1,8 +1,9 @@
-
 use strict;
 use warnings;
+
 package Net::PcapWriter::TCP;
-use fields qw(flow writer last_timestamp);
+use fields qw(flow writer l2prefix pktmpl last_timestamp);
+
 use Net::PcapWriter::IP;
 use Socket qw(AF_INET IPPROTO_TCP);
 
@@ -18,6 +19,11 @@ sub new {
     ];
     $self->{writer} = $writer;
     $self->{last_timestamp} = undef;
+    $self->{l2prefix} = $self->{writer}->layer2prefix($src);
+    $self->{pktmpl} = [
+	ip_packet( undef, $src, $dst, IPPROTO_TCP, 16),
+	ip_packet( undef, $dst, $src, IPPROTO_TCP, 16),
+    ];
     return $self;
 }
 
@@ -71,19 +77,16 @@ sub write_with_flags {
 	+ ($flags->{fin}?1:0)
     ) % 2**32;
     $self->{last_timestamp} = $timestamp;
-    $self->{writer}->packet( ip_packet(
-	$tcp,
-	$flow->[0],
-	$flow->[1],
-	IPPROTO_TCP,
-	16
-    ), $timestamp );
+    $self->{writer}->packet(
+	$self->{l2prefix} . $self->{pktmpl}[$dir]($tcp),
+	$timestamp
+    );
 }
 
 sub write {
     my ($self,$dir,$data,$timestamp) = @_;
     $self->_connect($timestamp);
-    $self->write_with_flags($dir,$data,undef,$timestamp);
+    write_with_flags($self,$dir,$data,undef,$timestamp);
 }
 
 sub _connect {
@@ -92,17 +95,17 @@ sub _connect {
 	&& ($self->{flow}[1][4] & 0b11) == 0b11;
 
     # client: SYN
-    $self->write_with_flags(0,'',{ syn => 1 },$timestamp) 
+    write_with_flags($self,0,'',{ syn => 1 },$timestamp) 
 	if ($self->{flow}[0][4] & 0b01) == 0;
 
     # server: SYN+ACK
-    $self->write_with_flags(1,'',{ 
+    write_with_flags($self,1,'',{ 
 	($self->{flow}[1][4] & 0b01) == 0 ? ( syn => 1 ):(),
 	($self->{flow}[1][4] & 0b10) == 0 ? ( ack => 1 ):(),
     },$timestamp) if ($self->{flow}[1][4] & 0b11) == 0;
 
     # client: ACK
-    $self->write_with_flags(0,'',{ ack => 1 },$timestamp) 
+    write_with_flags($self,0,'',{ ack => 1 },$timestamp) 
 	if ($self->{flow}[0][4] & 0b10) == 0;
 }
 
@@ -111,17 +114,17 @@ sub _close {
     $self->_connect($timestamp);
 
     # client: FIN
-    $self->write_with_flags(0,'',{ fin => 1 },$timestamp) 
+    write_with_flags($self,0,'',{ fin => 1 },$timestamp) 
 	if ($self->{flow}[0][4] & 0b0100) == 0;
 
     # server: FIN+ACK
-    $self->write_with_flags(1,'',{ 
+    write_with_flags($self,1,'',{ 
 	($self->{flow}[1][4] & 0b0100) == 0 ? ( fin => 1 ):(),
 	($self->{flow}[1][4] & 0b1000) == 0 ? ( ack => 1 ):(),
     },$timestamp) if ($self->{flow}[1][4] & 0b1100) == 0;
 
     # client: ACK
-    $self->write_with_flags(0,'',{ ack => 1 },$timestamp) 
+    write_with_flags($self,0,'',{ ack => 1 },$timestamp) 
 	if ($self->{flow}[0][4] & 0b1000) == 0;
 }
 
@@ -129,14 +132,14 @@ sub shutdown {
     my ($self,$dir,$timestamp) = @_;
     if (($self->{flow}[$dir][4] & 0b0100) == 0) {
 	$self->_connect($timestamp);
-	$self->write_with_flags($dir,'',{ fin => 1 },$timestamp);
-	$self->write_with_flags($dir ? 0:1,'',{ ack => 1 },$timestamp);
+	write_with_flags($self,$dir,'',{ fin => 1 },$timestamp);
+	write_with_flags($self,$dir ? 0:1,'',{ ack => 1 },$timestamp);
     }
 }
 
 sub ack {
     my ($self,$dir,$timestamp) = @_;
-    $self->write_with_flags($dir,'',{ ack => 1 },$timestamp);
+    write_with_flags($self,$dir,'',{ ack => 1 },$timestamp);
 }
 
 sub DESTROY {

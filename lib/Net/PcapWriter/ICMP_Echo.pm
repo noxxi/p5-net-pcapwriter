@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package Net::PcapWriter::ICMP_Echo;
-use fields qw(id src dst seq writer);
+use fields qw(id src dst seq ip6 l2prefix writer);
 use Net::PcapWriter::IP;
 
 sub new {
@@ -12,6 +12,8 @@ sub new {
     $self->{id}     = $identifier;
     $self->{src}    = $src;
     $self->{dst}    = $dst;
+    $self->{l2prefix} = $self->{writer}->layer2prefix($src);
+    $self->{ip6}    = $src =~m{:};
     return $self;
 }
 
@@ -21,10 +23,9 @@ sub _write {
     my ($self,$dir,$seq,$data,$timestamp) = @_;
 
     my ($src,$dst) = $dir ? @{$self}{qw(dst src)} : @{$self}{qw(src dst)};
-    my $ip6 = $src =~m{:};
     my $type = $dir ?
-	$ip6 ? 129 : 0 :  # echo reply
-	$ip6 ? 128 : 8;   # echo request
+	$self->{ip6} ? 129 : 0 :  # echo reply
+	$self->{ip6} ? 128 : 8;   # echo request
     my $echo = pack("CCnnna*",
 	$type,
 	0,             # code = 0
@@ -37,9 +38,10 @@ sub _write {
     $self->{writer}->packet(
 	# checksum at offset 2
 	# for ip4 no pseudo-header will be included in checksum
-	$ip6 
+	$self->{l2prefix} . ( $self->{ip6}
 	    ? ip6_packet($echo,$src,$dst, 58, 2  )
-	    : ip4_packet($echo,$src,$dst,  1, 2,1),
+	    : ip4_packet($echo,$src,$dst,  1, 2,1)
+	),
 	$timestamp
     );
 }

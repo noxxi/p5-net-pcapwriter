@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 package Net::PcapWriter::UDP;
-use fields qw(flow writer);
+use fields qw(flow l2prefix pktmpl writer);
 use Net::PcapWriter::IP;
 use Socket qw(AF_INET IPPROTO_UDP);
 
@@ -15,6 +15,11 @@ sub new {
 	[ $dst,$src,$dport,$sport ],
     ];
     $self->{writer} = $writer;
+    $self->{l2prefix} = $self->{writer}->layer2prefix($src);
+    $self->{pktmpl} = [
+	ip_packet( undef, $src, $dst, IPPROTO_UDP, 6),
+	ip_packet( undef, $dst, $src, IPPROTO_UDP, 6),
+    ];
     return $self;
 }
 
@@ -29,13 +34,10 @@ sub write {
 	$data                        # payload
     );
 
-    $self->{writer}->packet( ip_packet(
-	$udp,
-	$flow->[0],
-	$flow->[1],
-	IPPROTO_UDP,
-	6
-    ), $timestamp );
+    $self->{writer}->packet(
+	$self->{l2prefix} . $self->{pktmpl}[$dir]($udp),
+	$timestamp
+    );
 }
 
 1;
