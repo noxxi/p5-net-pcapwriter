@@ -123,7 +123,7 @@ sub ip_packet {
     goto &ip4_packet;
 }
 
-sub ip_chksum {
+sub ip_chksum16 {
     my $data = pop;
     $data .= "\x00" if length($data) % 2; # padding
     my $sum = 0;
@@ -132,5 +132,19 @@ sub ip_chksum {
     $sum = ~(($sum >> 16) + $sum) & 0xffff;
     return $sum;
 }
+
+sub ip_chksum32 {
+    my $data = pop;
+    $data .= "\x00" x (4 - length($data) % 4); # padding
+    my $sum = 0;
+    $sum += $_ for unpack('N*', $data);
+    $sum = ($sum >> 16) + ($sum & 0xffff);
+    $sum = ($sum >> 16) + ($sum & 0xffff);
+    $sum = ($sum >> 16) + ($sum & 0xffff);
+    return ~$sum;
+}
+
+require Config;
+*ip_chksum = $Config::Config{ivsize} == 8 ? \&ip_chksum32 : \&ip_chksum16;
 
 1;

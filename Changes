@@ -1,3 +1,5 @@
+0.719 2015-12-15
+- faster checksum calculation which has a major performance impact
 0.718 2015-12-08
 - fix IPv6 support (was bad ethernet type id)
 - performance should be faster for TCP and UDP now
