@@ -1,3 +1,6 @@
+0.720 2015-12-16
+- option to disable checksum calculation completly which gives a major
+  performance boost
 0.719 2015-12-15
 - faster checksum calculation which has a major performance impact
 0.718 2015-12-08

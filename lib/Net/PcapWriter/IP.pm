@@ -7,6 +7,10 @@ use base 'Exporter';
 # re-export the usable inet_pton
 our @EXPORT = qw(ip_chksum ip4_packet ip6_packet ip_packet inet_pton);
 
+
+my $do_chksum = 1;
+sub calculate_checksums { $do_chksum = $_[1] }
+
 BEGIN { 
     # inet_pton is in Socket since 5.12
     # but even if it is in Socket it can throw a non-implemented error
@@ -41,6 +45,7 @@ sub ip4_packet {
     );
 
     if (defined $data) {
+	return $hdr.$data if ! $do_chksum;
 	if (defined $chksum_offset) {
 	    my $ckdata = $no_pseudo_header ? $data :
 		substr($hdr,-8).pack('xCna*',
@@ -54,6 +59,13 @@ sub ip4_packet {
     }
 
     # data not defined, return sub which creates packet once data are known
+    if (!$do_chksum) {
+	return sub {
+	    substr(my $lhdr = $hdr,2,2) = pack('n',length($_[0])+20);
+	    return $lhdr.$_[0];
+	};
+    }
+
     if (! defined $chksum_offset) {
 	return sub {
 	    substr(my $lhdr = $hdr,2,2) = pack('n',length($_[0])+20);
@@ -89,7 +101,7 @@ sub ip6_packet {
 
     if (defined $data) {
 	# return packet
-	if (defined $chksum_offset) {
+	if ($do_chksum && defined $chksum_offset) {
 	    my $ckdata = substr($hdr,-32).pack('NxxxCa*',
 		length($data), $protocol, # len + proto
 		$data
@@ -109,11 +121,13 @@ sub ip6_packet {
     return sub {
 	my $data = shift;
 	substr($hdr,4,2) = pack('n',length($data));
-	my $ckdata = substr($hdr,-32).pack('NxxxCa*',
-	    length($data), $protocol, # len + proto
-	    $data
-	);
-	substr($data,$chksum_offset, 2) = pack('n',ip_chksum($ckdata));
+	if ($do_chksum) {
+	    my $ckdata = substr($hdr,-32).pack('NxxxCa*',
+		length($data), $protocol, # len + proto
+		$data
+	    );
+	    substr($data,$chksum_offset, 2) = pack('n',ip_chksum($ckdata));
+	}
 	return $hdr.$data;
     };
 }

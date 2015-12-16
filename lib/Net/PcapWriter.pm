@@ -6,7 +6,7 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.719';
+our $VERSION = '0.720';
 
 sub new {
     my ($class,$file) = @_;
@@ -115,6 +115,10 @@ Net::PcapWriter - simple creation of pcap files from code
 =head1 SYNOPSIS
 
  use Net::PcapWriter;
+
+ # disabling checksum calculation leads to huge performance boost
+ Net::PcapWriter::IP->calculate_checksums(0);
+
  my $writer = Net::PcapWriter->new('test.pcap');
  my $conn = $writer->tcp_conn('1.2.3.4',1234,'5.6.7.8',80);
 
@@ -238,6 +242,11 @@ Will write an ICMP echo reply from connection destination to source with
 sequence $seq and data $data.
 
 =back
+
+Additionally a huge performance boost can be reached by disabling checksum
+calculation:
+
+   Net::PcapWriter::IP->calculate_checksums(0);
 
 =head1 AUTHOR
 
