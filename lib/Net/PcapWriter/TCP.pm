@@ -37,12 +37,22 @@ sub write_with_flags {
 	$flow->[5] ||= rand(2**32);
     }
     if ($flags->{fin}) {
-	$flow->[4] |= 0b0100;
+	if (($flow->[4] & 0b0100) == 0) {
+	    $flow->[4] |= 0b0100;
+	    $flow->[5]++
+	}
+    }
+    if ($flags->{rst}) {
+	# consider closed
+	$flow->[4] |= 0b1100;
+	$self->{flow}[$dir?0:1][4] |= 0b1100;
     }
     if ($flags->{ack}) {
 	$flow->[4] |= 0b0010 if ($flow->[4] & 0b0011) == 0b0001; # ACK for SYN
 	$flow->[4] |= 0b1000 if ($flow->[4] & 0b1100) == 0b0100; # ACK for FIN
     }
+
+    return if ! defined $data; # only update state
 
     my $sn = $flow->[5];
     my $ack = $self->{flow}[$dir?0:1][5];
@@ -74,7 +84,6 @@ sub write_with_flags {
     $flow->[5] = (
 	$flow->[5]
 	+ length($data)
-	+ ($flags->{fin}?1:0)
     ) % 2**32;
     $self->{last_timestamp} = $timestamp;
     $self->{writer}->packet(
@@ -113,32 +122,46 @@ sub _connect {
     $self->{connected} = 1;
 }
 
-sub _close {
-    my ($self,$timestamp) = @_;
-    _connect($self,$timestamp) if ! $self->{connected};
-    my $flow = $self->{flow};
-
-    # client: FIN
-    write_with_flags($self,0,'',{ fin => 1 },$timestamp) 
-	if ($flow->[0][4] & 0b0100) == 0;
-
-    # server: FIN+ACK
-    write_with_flags($self,1,'',{ 
-	($flow->[1][4] & 0b0100) == 0 ? ( fin => 1 ):(),
-	($flow->[1][4] & 0b1000) == 0 ? ( ack => 1 ):(),
-    },$timestamp) if ($flow->[1][4] & 0b1100) == 0;
-
-    # client: ACK
-    write_with_flags($self,0,'',{ ack => 1 },$timestamp) 
-	if ($flow->[0][4] & 0b1000) == 0;
-}
-
 sub shutdown {
     my ($self,$dir,$timestamp) = @_;
     if (($self->{flow}[$dir][4] & 0b0100) == 0) {
 	_connect($self,$timestamp) if ! $self->{connected};
 	write_with_flags($self,$dir,'',{ fin => 1 },$timestamp);
 	write_with_flags($self,$dir ? 0:1,'',{ ack => 1 },$timestamp);
+    }
+}
+
+sub close {
+    my ($self,$dir,$type,$timestamp) = @_;
+    my $flow = $self->{flow};
+
+    if (!defined $type or $type eq '') {
+	# simulate close only - don't write any packets
+	$flow->[0][4] |= 0b1100;
+	$flow->[1][4] |= 0b1100;
+
+    } elsif ($type eq 'fin') {
+	# $dir: FIN
+	write_with_flags($self,$dir,'',{ fin => 1 },$timestamp)
+	    if ($flow->[$dir][4] & 0b0100) == 0;
+
+	# $odir: FIN+ACK
+	my $odir = $dir?0:1;
+	write_with_flags($self,$odir,'',{
+	    ($flow->[$odir][4] & 0b0100) == 0 ? ( fin => 1 ):(),
+	    ($flow->[$odir][4] & 0b1000) == 0 ? ( ack => 1 ):(),
+	},$timestamp) if ($flow->[$odir][4] & 0b1100) == 0;
+
+	# $dir: ACK
+	write_with_flags($self,$dir,'',{ ack => 1 },$timestamp)
+	    if ($flow->[$dir][4] & 0b1000) == 0;
+
+    } elsif ($type eq 'rst') {
+	# single RST and then connection is closed
+	write_with_flags($self,$dir,'',{ rst => 1 },$timestamp);
+
+    } else {
+	die "only fin|rst|undef are allowed with close"
     }
 }
 
@@ -149,7 +172,7 @@ sub ack {
 
 sub DESTROY {
     my $self = shift;
-    $self->_close($self->{last_timestamp});
+    &close($self,0,'fin',$self->{last_timestamp});
 }
 
 

@@ -6,7 +6,7 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.720';
+our $VERSION = '0.721';
 
 sub new {
     my ($class,$file) = @_;
@@ -207,6 +207,21 @@ server and SYN+ACK from client) and the close of the connection (FIN), whereby
 the close can be easier handled with C<shutdown>.
 
 Possible flags are syn, ack, fin, rst, psh and rst.
+
+If C<$data> is undef only the internal state regarding the flags will be set.
+
+=item $tcpconn->close($dir,$data,$flag,[$timestamp]);
+
+Close the connection. C<$dir> is the side which initiates the close and C<$flag>
+is how the connection is closed, i.e. C<'fin'>, C<'rst'> or C<''>. In the last
+case no data will be written but only the internal state will be set to mark the
+connection as closed. This way no more closing data will be written on DESTROY
+of the object.
+
+Note that the DESTROY of the object will automatically write a normal close
+(with FIN) if the connection is not yet considered closed and thus an explicit
+close is only needed if one needs more explicit control how the closing should
+look like.
 
 =item undef $tcpconn
 

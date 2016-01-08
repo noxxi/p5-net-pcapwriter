@@ -1,3 +1,5 @@
+0.721 2016-01-08
+- more control over the closing process with the close method in TCP
 0.720 2015-12-16
 - option to disable checksum calculation completly which gives a major
   performance boost
