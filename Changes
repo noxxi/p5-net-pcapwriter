@@ -1,3 +1,5 @@
+0.722 2016-01-21
+- reopen function usable for rotating output etc
 0.721 2016-01-08
 - more control over the closing process with the close method in TCP
 0.720 2015-12-16

@@ -6,10 +6,17 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.721';
+our $VERSION = '0.722';
 
 sub new {
     my ($class,$file) = @_;
+    my $self = bless { fh => undef },$class;
+    $self->reopen($file);
+    return $self;
+}
+
+sub reopen {
+    my ($self,$file) = @_;
     my $fh;
     if ( $file ) {
 	if ( ref($file)) {
@@ -21,9 +28,8 @@ sub new {
     } else {
 	$fh = \*STDOUT;
     }
-    my $self = bless { fh => $fh },$class;
+    $self->{fh} = $fh;
     $self->_header;
-    return $self;
 }
 
 # write pcap header
@@ -168,6 +174,12 @@ Creates new object.
 If file name is given it will be opened for writing, if file handle is given it
 will be used. Otherwise the pcap data will be written to STDOUT.
 Will write pcap header for DLT_RAW to pcap file.
+
+=item $class->reopen([$filename|$handle])
+
+This will close the current pcap file and open a new one. No connections will
+be implicitely closed, i.e. they will continue inside the new pcap file. The
+main purpose is to be able to rotate the file after some time or size.
 
 =item $writer->packet($pkt,[$timestamp])
 
