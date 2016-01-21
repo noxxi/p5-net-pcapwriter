@@ -210,7 +210,7 @@ Possible flags are syn, ack, fin, rst, psh and rst.
 
 If C<$data> is undef only the internal state regarding the flags will be set.
 
-=item $tcpconn->close($dir,$data,$flag,[$timestamp]);
+=item $tcpconn->close($dir,$flag,[$timestamp]);
 
 Close the connection. C<$dir> is the side which initiates the close and C<$flag>
 is how the connection is closed, i.e. C<'fin'>, C<'rst'> or C<''>. In the last
