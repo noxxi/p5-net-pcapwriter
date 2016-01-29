@@ -6,7 +6,7 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.722';
+our $VERSION = '0.723';
 
 sub new {
     my ($class,$file) = @_;
@@ -234,6 +234,13 @@ Note that the DESTROY of the object will automatically write a normal close
 (with FIN) if the connection is not yet considered closed and thus an explicit
 close is only needed if one needs more explicit control how the closing should
 look like.
+
+=item $tcpconn->connect($dir,[$timestamp])
+
+This will explicitely open the connection (3-way handshake) unless it is already
+open. This will be implicitely done if the connection is not fully open in case
+of C<write> or C<shutdown> so usually it is not necessary to call this function
+explicitely.
 
 =item undef $tcpconn
 

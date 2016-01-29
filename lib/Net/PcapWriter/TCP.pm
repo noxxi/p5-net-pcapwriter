@@ -36,12 +36,6 @@ sub write_with_flags {
 	$flow->[4] |= 0b0001;
 	$flow->[5] ||= rand(2**32);
     }
-    if ($flags->{fin}) {
-	if (($flow->[4] & 0b0100) == 0) {
-	    $flow->[4] |= 0b0100;
-	    $flow->[5]++
-	}
-    }
     if ($flags->{rst}) {
 	# consider closed
 	$flow->[4] |= 0b1100;
@@ -52,9 +46,16 @@ sub write_with_flags {
 	$flow->[4] |= 0b1000 if ($flow->[4] & 0b1100) == 0b0100; # ACK for FIN
     }
 
+    my $sn = $flow->[5];
+    if ($flags->{fin}) {
+	if (($flow->[4] & 0b0100) == 0) {
+	    $flow->[4] |= 0b0100;
+	    $flow->[5]++
+	}
+    }
+
     return if ! defined $data; # only update state
 
-    my $sn = $flow->[5];
     my $ack = $self->{flow}[$dir?0:1][5];
     $flags->{ack} = 1 if defined $ack;
 
@@ -120,6 +121,11 @@ sub _connect {
 
     done:
     $self->{connected} = 1;
+}
+
+sub connect {
+    my ($self,$timestamp) = @_;
+    _connect($self,$timestamp) if ! $self->{connected};
 }
 
 sub shutdown {
