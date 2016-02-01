@@ -12,7 +12,7 @@ sub new {
     my $self = fields::new($class);
     $self->{flow} = [
 	# src, dst, sport, dport, state, sn
-	# state = 0bFfSs: send[F]inack|send[f]in|send[S]ynack|send[s]yn
+	# state = 0bFfSs: acked [F]in|send [f]in|acked [S]yn|send [s]yn
 	# sn gets initialized on sending SYN
 	[ $src,$dst,$sport,$dport,0,     undef ],
 	[ $dst,$src,$dport,$sport,0,     undef ],
@@ -36,22 +36,23 @@ sub write_with_flags {
 	$flow->[4] |= 0b0001;
 	$flow->[5] ||= rand(2**32);
     }
+    my $sn = $flow->[5];
+
     if ($flags->{rst}) {
 	# consider closed
 	$flow->[4] |= 0b1100;
 	$self->{flow}[$dir?0:1][4] |= 0b1100;
     }
-    if ($flags->{ack}) {
-	$flow->[4] |= 0b0010 if ($flow->[4] & 0b0011) == 0b0001; # ACK for SYN
-	$flow->[4] |= 0b1000 if ($flow->[4] & 0b1100) == 0b0100; # ACK for FIN
-    }
-
-    my $sn = $flow->[5];
     if ($flags->{fin}) {
 	if (($flow->[4] & 0b0100) == 0) {
 	    $flow->[4] |= 0b0100;
 	    $flow->[5]++
 	}
+    }
+    if ($flags->{ack}) {
+	my $oflow = $self->{flow}[$dir?0:1];
+	$flow->[4] |= 0b0010 if $oflow->[4] & 0b0001; # ACK the SYN
+	$flow->[4] |= 0b1000 if $oflow->[4] & 0b0100; # ACK the FIN
     }
 
     return if ! defined $data; # only update state
@@ -113,7 +114,7 @@ sub _connect {
     write_with_flags($self,1,'',{ 
 	($flow->[1][4] & 0b01) == 0 ? ( syn => 1 ):(),
 	($flow->[1][4] & 0b10) == 0 ? ( ack => 1 ):(),
-    },$timestamp) if ($flow->[1][4] & 0b11) == 0;
+    },$timestamp) if ($flow->[1][4] & 0b11) != 0b11;
 
     # client: ACK
     write_with_flags($self,0,'',{ ack => 1 },$timestamp) 
@@ -156,7 +157,7 @@ sub close {
 	write_with_flags($self,$odir,'',{
 	    ($flow->[$odir][4] & 0b0100) == 0 ? ( fin => 1 ):(),
 	    ($flow->[$odir][4] & 0b1000) == 0 ? ( ack => 1 ):(),
-	},$timestamp) if ($flow->[$odir][4] & 0b1100) == 0;
+	},$timestamp) if ($flow->[$odir][4] & 0b1100) != 0b1100;
 
 	# $dir: ACK
 	write_with_flags($self,$dir,'',{ ack => 1 },$timestamp)
@@ -178,6 +179,7 @@ sub ack {
 
 sub DESTROY {
     my $self = shift;
+    $self->{writer} or return; # happens in global destruction
     &close($self,0,'fin',$self->{last_timestamp});
 }
 

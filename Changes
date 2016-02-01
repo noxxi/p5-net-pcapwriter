@@ -1,3 +1,5 @@
+0.724 2016-02-01
+- fix duplicate ACK for FIN in some occassion of multiple shutdown/close.
 0.723 2016-01-29
 - fixed off-by-one calculation of sequence number for FIN in TCP.pm
 - added explicit connect function in TCP.pm

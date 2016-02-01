@@ -6,7 +6,7 @@ use Net::PcapWriter::TCP;
 use Net::PcapWriter::UDP;
 use Net::PcapWriter::ICMP_Echo;
 
-our $VERSION = '0.723';
+our $VERSION = '0.724';
 
 sub new {
     my ($class,$file) = @_;
